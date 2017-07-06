@@ -16,6 +16,7 @@ const { start: startWSServer, notifyPlaylist } = require('./lib/websockets')
 const {
   addToPlaylist,
   randomizeUserPlaylist,
+  setUserPlaylist,
   getPlaylist,
   playNext,
   pause,
@@ -47,6 +48,15 @@ module.exports = ({ contents, port }) => {
   })
 
   app.get('/playlist', (req, res) => res.json(getPlaylist()))
+
+  // Lets a user update his playlist
+  app.put('/playlist', (req, res) => {
+    const { username, contentIds = [] } = req.body
+    if (!username) return res.status(404).json({ message: 'Missing username' })
+    setUserPlaylist(username, contents.filter(content => contentIds.includes(content.id)))
+    notifyPlaylist(getPlaylist())
+    res.send({ message: 'Done' })
+  })
 
   app.get('/pause', (req, res) => {
     pause()
